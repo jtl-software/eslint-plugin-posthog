@@ -115,20 +115,6 @@ To test the plugin in your project before publishing:
 
 3. Add the plugin to your ESLint config as shown above
 
-### CI/CD
-
-This project uses GitHub Actions for continuous integration and deployment:
-
-- **Tests** run automatically on every push and pull request
-- **Publishing to npm** happens automatically when pushing to the `main` branch
-
-To set up automatic publishing, add an `NPM_TOKEN` secret to your GitHub repository:
-
-1. Generate an npm access token at https://www.npmjs.com/settings/tokens
-2. Go to your repository settings on GitHub
-3. Navigate to Settings → Secrets and variables → Actions
-4. Add a new repository secret named `NPM_TOKEN` with your npm token
-
 ## License
 
 MIT

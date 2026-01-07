@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read .tool-versions
+        id: tool-versions
+        run: |
+          NODE_VERSION=$(grep nodejs .tool-versions | awk '{print $2}')
+          PNPM_VERSION=$(grep pnpm .tool-versions | awk '{print $2}')
+          echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.tool-versions.outputs.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ steps.tool-versions.outputs.pnpm-version }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+  publish:
+    name: Publish to npm
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read .tool-versions
+        id: tool-versions
+        run: |
+          NODE_VERSION=$(grep nodejs .tool-versions | awk '{print $2}')
+          PNPM_VERSION=$(grep pnpm .tool-versions | awk '{print $2}')
+          echo "node-version=$NODE_VERSION" >> $GITHUB_OUTPUT
+          echo "pnpm-version=$PNPM_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.tool-versions.outputs.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ steps.tool-versions.outputs.pnpm-version }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check if version exists on npm
+        id: version-check
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "package-version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+
+          if npm view @jtl-software/eslint-plugin-posthog@$PACKAGE_VERSION version 2>/dev/null; then
+            echo "should-publish=false" >> $GITHUB_OUTPUT
+            echo "Version $PACKAGE_VERSION already exists on npm, skipping publish"
+          else
+            echo "should-publish=true" >> $GITHUB_OUTPUT
+            echo "Version $PACKAGE_VERSION not found on npm, will publish"
+          fi
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.should-publish == 'true'
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
