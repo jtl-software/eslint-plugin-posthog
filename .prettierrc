@@ -1,0 +1,9 @@
+{
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "printWidth": 90,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "useTabs": false,
+  "tabWidth": 2
+}

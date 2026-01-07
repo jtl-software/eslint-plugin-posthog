@@ -1,0 +1,36 @@
+{
+  "name": "@jtl-software/eslint-plugin-posthog",
+  "version": "0.1.0",
+  "description": "ESLint rules for PostHog event tracking best practices",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src tests",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "eslint",
+    "eslint-plugin",
+    "posthog",
+    "analytics",
+    "event-tracking"
+  ],
+  "author": "JTL Platform Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
