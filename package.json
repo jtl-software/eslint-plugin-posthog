@@ -1,6 +1,6 @@
 {
   "name": "@jtl-software/eslint-plugin-posthog",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ESLint rules for PostHog event tracking best practices",
   "main": "src/index.js",
   "type": "module",
@@ -20,6 +20,10 @@
   ],
   "author": "JTL Platform Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jtl-software/eslint-plugin-posthog.git"
+  },
   "peerDependencies": {
     "eslint": "^9.0.0"
   },
