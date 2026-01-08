@@ -1,6 +1,6 @@
 {
   "name": "@jtl-software/eslint-plugin-posthog",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ESLint rules for PostHog event tracking best practices",
   "main": "src/index.js",
   "type": "module",

@@ -27,6 +27,13 @@ export default {
             enum: ['snake_case', 'camelCase'],
             default: 'snake_case',
           },
+          customVerbs: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            default: [],
+          },
         },
         additionalProperties: false,
       },
@@ -36,6 +43,7 @@ export default {
   create(context) {
     const options = context.options[0] || {};
     const casing = options.casing || 'snake_case';
+    const customVerbs = options.customVerbs || [];
 
     function isSnakeCase(str) {
       return /^[a-z][a-z0-9_:]*$/.test(str);
@@ -149,8 +157,11 @@ export default {
         'terminate',
       ];
 
+      // Merge custom verbs with common verbs
+      const allVerbs = [...commonVerbs, ...customVerbs.map(v => v.toLowerCase())];
+
       return (
-        verbPatterns.some((pattern) => pattern.test(lastWord)) || commonVerbs.includes(lastWord)
+        verbPatterns.some((pattern) => pattern.test(lastWord)) || allVerbs.includes(lastWord)
       );
     }
 

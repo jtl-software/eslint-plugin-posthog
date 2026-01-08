@@ -300,3 +300,94 @@ ruleTester.run('valid-event-names with camelCase', rule, {
     },
   ],
 });
+
+// Tests for custom verbs configuration
+ruleTester.run('valid-event-names with customVerbs', rule, {
+  valid: [
+    // Custom verb 'process' in snake_case
+    {
+      code: `postHog.capture('order_process', { orderId: '123' })`,
+      options: [{ customVerbs: ['process'] }],
+    },
+    // Custom verb 'checkout' in snake_case
+    {
+      code: `postHog.capture('cart_checkout', { cartId: '456' })`,
+      options: [{ customVerbs: ['checkout'] }],
+    },
+    // Multiple custom verbs
+    {
+      code: `postHog.capture('payment_authorize', { amount: 100 })`,
+      options: [{ customVerbs: ['authorize', 'process', 'checkout'] }],
+    },
+    // Custom verb with category prefix
+    {
+      code: `postHog.capture('account:password_reset', { userId: '789' })`,
+      options: [{ customVerbs: ['reset'] }],
+    },
+    // Built-in verbs should still work with customVerbs option
+    {
+      code: `postHog.capture('button_clicked', { userId: '123' })`,
+      options: [{ customVerbs: ['process'] }],
+    },
+    // Custom verb with camelCase
+    {
+      code: `postHog.capture('orderProcess', { orderId: '123' })`,
+      options: [{ casing: 'camelCase', customVerbs: ['process'] }],
+    },
+    {
+      code: `postHog.capture('cartCheckout', { cartId: '456' })`,
+      options: [{ casing: 'camelCase', customVerbs: ['checkout'] }],
+    },
+    {
+      code: `postHog.capture('account:passwordReset', { userId: '789' })`,
+      options: [{ casing: 'camelCase', customVerbs: ['reset'] }],
+    },
+  ],
+
+  invalid: [
+    // Custom verb provided but event doesn't end with a verb
+    {
+      code: `postHog.capture('button_color', { color: 'red' })`,
+      options: [{ customVerbs: ['process'] }],
+      errors: [
+        {
+          messageId: 'missingVerb',
+          data: { eventName: 'button_color' },
+        },
+      ],
+    },
+    // Custom verb provided but event is too short
+    {
+      code: `postHog.capture('process', { id: '123' })`,
+      options: [{ customVerbs: ['process'] }],
+      errors: [
+        {
+          messageId: 'tooShort',
+          data: { eventName: 'process' },
+        },
+      ],
+    },
+    // Custom verb provided but wrong casing
+    {
+      code: `postHog.capture('OrderProcess', { orderId: '123' })`,
+      options: [{ customVerbs: ['process'] }],
+      errors: [
+        {
+          messageId: 'notSnakeCase',
+          data: { eventName: 'OrderProcess' },
+        },
+      ],
+    },
+    // camelCase with custom verb but wrong casing
+    {
+      code: `postHog.capture('order_process', { orderId: '123' })`,
+      options: [{ casing: 'camelCase', customVerbs: ['process'] }],
+      errors: [
+        {
+          messageId: 'notCamelCase',
+          data: { eventName: 'order_process' },
+        },
+      ],
+    },
+  ],
+});

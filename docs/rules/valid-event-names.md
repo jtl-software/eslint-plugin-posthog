@@ -16,9 +16,17 @@ This rule accepts an options object with the following properties:
 
 ```js
 {
-  "casing": "snake_case" | "camelCase" // default: "snake_case"
+  "casing": "snake_case" | "camelCase", // default: "snake_case"
+  "customVerbs": string[]                // default: []
 }
 ```
+
+### `casing`
+
+Specifies the casing convention for event names.
+
+- `"snake_case"` (default): Enforces lowercase with underscores (e.g., `button_clicked`, `user_created`)
+- `"camelCase"`: Enforces camelCase (e.g., `buttonClicked`, `userCreated`)
 
 **Example configuration:**
 
@@ -27,6 +35,29 @@ This rule accepts an options object with the following properties:
 module.exports = {
   rules: {
     'posthog/valid-event-names': ['error', { casing: 'camelCase' }]
+  }
+};
+```
+
+### `customVerbs`
+
+An array of additional verbs to recognize as valid event endings. This extends the built-in list of common verbs.
+
+- Type: `string[]`
+- Default: `[]`
+
+The rule includes a comprehensive list of built-in verbs (e.g., `click`, `view`, `submit`, `create`, `update`, etc.) and recognizes common verb patterns (e.g., `-ed`, `-ing`, `-ize`, `-ate`). Use `customVerbs` to add domain-specific verbs that aren't in the default list.
+
+**Example configuration:**
+
+```js
+// .eslintrc.js
+module.exports = {
+  rules: {
+    // Add custom verbs for your domain
+    'posthog/valid-event-names': ['error', {
+      customVerbs: ['process', 'checkout', 'authorize', 'reset']
+    }]
   }
 };
 ```
@@ -78,23 +109,6 @@ postHog.capture('form_submit', { formId: 'contact' });
 postHog.capture('account:settings_updated', { field: 'email' });
 postHog.capture('signup:button_clicked', { step: 1 });
 ```
-
-## Verb Patterns
-
-The rule recognizes several verb patterns:
-
-### Endings
-
-- **-ed**: Past tense (clicked, created, viewed, updated)
-- **-ing**: Present participle (clicking, creating, viewing)
-- **-e**: Present tense ending in 'e' (create, delete, update)
-- **-ize/-ise**: Verbs (initialize, customize)
-- **-ate**: Verbs (validate, activate)
-- **-ify**: Verbs (notify, verify)
-
-### Common Verbs
-
-The rule includes a list of common present-tense verbs like: click, view, submit, open, close, add, remove, start, stop, play, pause, load, save, send, login, logout, etc.
 
 ## Category Prefix (Optional)
 
