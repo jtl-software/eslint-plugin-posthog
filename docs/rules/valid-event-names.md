@@ -6,22 +6,45 @@ Enforce valid event naming conventions for PostHog events.
 
 This rule enforces that event names follow PostHog's recommended naming conventions:
 
-1. **snake_case**: Event names must use lowercase with underscores
-2. **Object-verb pattern**: Events should follow the `[object]_[verb]` format (e.g., `button_clicked`, `user_created`)
+1. **Consistent casing**: Event names must use either `snake_case` (default) or `camelCase`
+2. **Object-verb pattern**: Events should follow the `[object][verb]` format (e.g., `button_clicked` or `buttonClicked`, `user_created` or `userCreated`)
 3. **Verb ending**: Events must end with a verb to describe the action
+
+## Options
+
+This rule accepts an options object with the following properties:
+
+```js
+{
+  "casing": "snake_case" | "camelCase" // default: "snake_case"
+}
+```
+
+**Example configuration:**
+
+```js
+// .eslintrc.js
+module.exports = {
+  rules: {
+    'posthog/valid-event-names': ['error', { casing: 'camelCase' }]
+  }
+};
+```
 
 ## Examples
 
-### ❌ Incorrect
+### With `snake_case` (default)
+
+#### ❌ Incorrect
 
 ```js
-// Not snake_case (camelCase)
+// camelCase when snake_case is expected
 postHog.capture('buttonClicked', { userId: '123' });
 
-// Not snake_case (PascalCase)
+// PascalCase
 postHog.capture('ButtonClicked', { userId: '123' });
 
-// Not snake_case (kebab-case)
+// kebab-case
 postHog.capture('button-clicked', { userId: '123' });
 
 // Too short (missing object or verb)
@@ -33,7 +56,7 @@ postHog.capture('button_color', { color: 'red' });
 postHog.capture('user_profile', { userId: '123' });
 ```
 
-### ✅ Correct
+#### ✅ Correct
 
 ```js
 // Past tense verbs
@@ -86,19 +109,3 @@ Examples:
 - `account_settings:password_changed`
 - `signup_flow:form_submitted`
 - `checkout:payment_completed`
-
-## Why?
-
-- **Consistency**: Makes events easier to find and filter in PostHog
-- **Best practice**: Follows PostHog's official recommendations
-- **Clarity**: Object-verb pattern clearly describes what happened
-- **Analysis**: Consistent naming enables better querying and grouping
-
-## When Not To Use It
-
-If your team has established a different event naming convention and can't migrate, you may want to disable this rule. However, following PostHog's recommendations will make your analytics more maintainable.
-
-## Related Rules
-
-- [no-literal-event-names](./no-literal-event-names.md)
-- [consistent-property-naming](./consistent-property-naming.md)

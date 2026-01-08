@@ -8,28 +8,41 @@ export default {
     type: 'suggestion',
     docs: {
       description:
-        'Enforce consistent property naming convention (camelCase) in PostHog capture calls',
+        'Enforce consistent property naming convention in PostHog capture calls',
       recommended: true,
     },
     messages: {
       notCamelCase: 'Property "{{property}}" should use camelCase naming convention',
+      notSnakeCase: 'Property "{{property}}" should use snake_case naming convention',
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          casing: {
+            type: 'string',
+            enum: ['camelCase', 'snake_case'],
+            default: 'snake_case',
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
 
   create(context) {
     const wrapperFunctions = new Map();
     const captureCalls = [];
 
-    /**
-     * Check if a string is in camelCase
-     * @param {string} str - The string to check
-     * @returns {boolean}
-     */
+    const options = context.options[0] || {};
+    const casing = options.casing || 'snake_case';
+
     function isCamelCase(str) {
-      // Allow camelCase: starts with lowercase, can contain uppercase letters and numbers
-      // No underscores or hyphens allowed
       return /^[a-z][a-zA-Z0-9]*$/.test(str);
+    }
+
+    function isSnakeCase(str) {
+      return /^[a-z][a-z0-9_]*$/.test(str);
     }
 
     /**
@@ -54,10 +67,13 @@ export default {
       objectNode.properties.forEach((prop) => {
         if (prop.type === 'Property' && prop.key.type === 'Identifier') {
           const propertyName = prop.key.name;
-          if (!isCamelCase(propertyName)) {
+          const isCorrectCasing = casing === 'camelCase' ? isCamelCase(propertyName) : isSnakeCase(propertyName);
+          const messageId = casing === 'camelCase' ? 'notCamelCase' : 'notSnakeCase';
+
+          if (!isCorrectCasing) {
             context.report({
               node: prop.key,
-              messageId: 'notCamelCase',
+              messageId,
               data: {
                 property: propertyName,
               },

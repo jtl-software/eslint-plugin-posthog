@@ -195,3 +195,108 @@ ruleTester.run('valid-event-names', rule, {
     },
   ],
 });
+
+// Tests for camelCase configuration
+ruleTester.run('valid-event-names with camelCase', rule, {
+  valid: [
+    // camelCase with object-verb pattern
+    {
+      code: `postHog.capture('buttonClicked', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('userCreated', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('pageViewed', { path: '/home' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('videoPlaying', { videoId: '456' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('dataLoading', { count: 10 })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('buttonClick', { buttonId: 'submit' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('pageView', { path: '/about' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('userLogin', { method: 'oauth' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    {
+      code: `postHog.capture('formSubmit', { formId: 'contact' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+    // camelCase with category prefix
+    {
+      code: `postHog.capture('account:settingsUpdated', { field: 'email' })`,
+      options: [{ casing: 'camelCase' }],
+    },
+  ],
+
+  invalid: [
+    // snake_case when camelCase is expected
+    {
+      code: `postHog.capture('button_clicked', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+      errors: [
+        {
+          messageId: 'notCamelCase',
+          data: { eventName: 'button_clicked' },
+        },
+      ],
+    },
+    {
+      code: `postHog.capture('user_created', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+      errors: [
+        {
+          messageId: 'notCamelCase',
+          data: { eventName: 'user_created' },
+        },
+      ],
+    },
+    // PascalCase (not valid)
+    {
+      code: `postHog.capture('ButtonClicked', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+      errors: [
+        {
+          messageId: 'notCamelCase',
+          data: { eventName: 'ButtonClicked' },
+        },
+      ],
+    },
+    // Single word (missing object-verb pattern)
+    {
+      code: `postHog.capture('button', { userId: '123' })`,
+      options: [{ casing: 'camelCase' }],
+      errors: [
+        {
+          messageId: 'tooShort',
+          data: { eventName: 'button' },
+        },
+      ],
+    },
+    // Doesn't end with verb
+    {
+      code: `postHog.capture('buttonColor', { color: 'red' })`,
+      options: [{ casing: 'camelCase' }],
+      errors: [
+        {
+          messageId: 'missingVerb',
+          data: { eventName: 'buttonColor' },
+        },
+      ],
+    },
+  ],
+});

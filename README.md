@@ -48,31 +48,118 @@ module.exports = {
 
 ## Rules
 
-| Rule                                                                     | Description                            | Severity |
-| ------------------------------------------------------------------------ | -------------------------------------- | -------- |
-| [consistent-property-naming](./docs/rules/consistent-property-naming.md) | Enforce camelCase for property names   | error    |
-| [valid-event-names](./docs/rules/valid-event-names.md)                   | Enforce valid event naming conventions | error    |
+| Rule                                                                     | Description                                       | Severity |
+| ------------------------------------------------------------------------ | ------------------------------------------------- | -------- |
+| [consistent-property-naming](./docs/rules/consistent-property-naming.md) | Enforce consistent property naming (snake_case or camelCase) | error    |
+| [valid-event-names](./docs/rules/valid-event-names.md)                   | Enforce valid event naming conventions (snake_case or camelCase) | error    |
+
+## Configuration
+
+Both rules default to `snake_case` , but support configuration to match your team's conventions:
+
+### Event Names Casing
+
+```js
+// eslint.config.js
+export default [
+  {
+    rules: {
+      'posthog/valid-event-names': ['error', { casing: 'snake_case' }] // default, or 'camelCase'
+    }
+  }
+];
+```
+
+### Property Names Casing
+
+```js
+// eslint.config.js
+export default [
+  {
+    rules: {
+      'posthog/consistent-property-naming': ['error', { casing: 'snake_case' }] // default, or 'camelCase'
+    }
+  }
+];
+```
+
+### Complete Configuration Example
+
+```js
+// eslint.config.js
+import posthog from '@jtl-software/eslint-plugin-posthog';
+
+export default [
+  {
+    plugins: {
+      posthog
+    },
+    rules: {
+      // Default: snake_case for both 
+      'posthog/valid-event-names': 'error',
+      'posthog/consistent-property-naming': 'error',
+
+      // Or use camelCase for both
+      // 'posthog/valid-event-names': ['error', { casing: 'camelCase' }],
+      // 'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }],
+    }
+  }
+];
+```
 
 
 ## Examples
 
-### Before
+### Default Configuration (snake_case for both)
+
+#### Before
 
 ```js
 // ❌ Multiple issues
-postHog.capture('user clicked button', {
-  user_id: '123', // snake_case instead of camelCase
+postHog.capture('userClickedButton', {  // camelCase event name (should be snake_case)
+  userId: '123', // camelCase property (should be snake_case)
   ButtonName: 'Submit', // PascalCase
 });
 ```
 
-### After
+#### After
 
 ```js
-// ✅ Following best practices
+// ✅ Following PostHog's best practices (default)
 const EVENTS = {
   BUTTON_CLICKED: 'button_clicked',
   PAGE_VIEWED: 'page_viewed',
+};
+
+postHog.capture(EVENTS.BUTTON_CLICKED, {
+  user_id: '123',
+  button_name: 'Submit',
+  page: 'checkout',
+});
+
+postHog.capture(EVENTS.PAGE_VIEWED, {
+  page_path: '/checkout',
+  referrer: document.referrer,
+});
+```
+
+### With camelCase for Both Events and Properties
+
+```js
+// Configuration
+export default [
+  {
+    rules: {
+      'posthog/valid-event-names': ['error', { casing: 'camelCase' }],
+      'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }],
+    }
+  }
+];
+
+// Usage
+const EVENTS = {
+  BUTTON_CLICKED: 'buttonClicked',
+  PAGE_VIEWED: 'pageViewed',
 };
 
 postHog.capture(EVENTS.BUTTON_CLICKED, {
@@ -80,10 +167,31 @@ postHog.capture(EVENTS.BUTTON_CLICKED, {
   buttonName: 'Submit',
   page: 'checkout',
 });
+```
 
-postHog.capture(EVENTS.PAGE_VIEWED, {
-  pagePath: '/checkout',
-  referrer: document.referrer,
+### With snake_case for Both Events and Properties
+
+```js
+// Configuration
+export default [
+  {
+    rules: {
+      'posthog/valid-event-names': ['error', { casing: 'snake_case' }],
+      'posthog/consistent-property-naming': ['error', { casing: 'snake_case' }],
+    }
+  }
+];
+
+// Usage
+const EVENTS = {
+  BUTTON_CLICKED: 'button_clicked',
+  PAGE_VIEWED: 'page_viewed',
+};
+
+postHog.capture(EVENTS.BUTTON_CLICKED, {
+  user_id: '123',
+  button_name: 'Submit',
+  page: 'checkout',
 });
 ```
 

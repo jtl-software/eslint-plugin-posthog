@@ -7,29 +7,55 @@ export default {
   meta: {
     type: 'suggestion',
     docs: {
-      description: 'Enforce snake_case and object-verb pattern for PostHog event names',
+      description: 'Enforce naming conventions and object-verb pattern for PostHog event names',
       recommended: true,
     },
     messages: {
       notSnakeCase: 'Event name "{{eventName}}" should use snake_case naming convention',
+      notCamelCase: 'Event name "{{eventName}}" should use camelCase naming convention',
       missingVerb:
-        'Event name "{{eventName}}" should end with a verb (e.g., "object_clicked", "user_created", "page_view")',
+        'Event name "{{eventName}}" should end with a verb (e.g., "objectClicked", "userCreated", "pageView" for camelCase or "object_clicked", "user_created", "page_view" for snake_case)',
       tooShort:
         'Event name "{{eventName}}" should follow the [object][verb] pattern with at least two parts',
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          casing: {
+            type: 'string',
+            enum: ['snake_case', 'camelCase'],
+            default: 'snake_case',
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
 
   create(context) {
-    /**
-     * Check if a string is in snake_case
-     * @param {string} str - The string to check
-     * @returns {boolean}
-     */
+    const options = context.options[0] || {};
+    const casing = options.casing || 'snake_case';
+
     function isSnakeCase(str) {
-      // Allow snake_case: lowercase letters, numbers, and underscores
-      // Can also start with a category prefix like "category:object_action"
       return /^[a-z][a-z0-9_:]*$/.test(str);
+    }
+
+    function isCamelCase(str) {
+      return /^[a-z][a-z0-9]*:[a-z][a-zA-Z0-9]*$|^[a-z][a-zA-Z0-9]*$/.test(str);
+    }
+
+    function splitEventName(eventName) {
+      // Remove category prefix if present
+      const nameWithoutCategory = eventName.includes(':') ? eventName.split(':')[1] : eventName;
+
+      if (casing === 'snake_case') {
+        return nameWithoutCategory.split('_');
+      } else {
+        // Split camelCase into words
+        // e.g., "buttonClicked" -> ["button", "Clicked"]
+        return nameWithoutCategory.split(/(?=[A-Z])/);
+      }
     }
 
     /**
@@ -38,12 +64,8 @@ export default {
      * @returns {boolean}
      */
     function endsWithVerb(eventName) {
-      // Remove category prefix if present (e.g., "account:button_clicked" -> "button_clicked")
-      const nameWithoutCategory = eventName.includes(':') ? eventName.split(':')[1] : eventName;
-
-      // Split by underscore and get the last word
-      const words = nameWithoutCategory.split('_');
-      const lastWord = words[words.length - 1];
+      const words = splitEventName(eventName);
+      const lastWord = words[words.length - 1].toLowerCase();
 
       // Check for common verb patterns
       const verbPatterns = [/ed$/, /ing$/, /ize$/, /ise$/, /ate$/, /ify$/];
@@ -138,11 +160,7 @@ export default {
      * @returns {boolean}
      */
     function hasObjectVerbPattern(eventName) {
-      // Remove category prefix if present
-      const nameWithoutCategory = eventName.includes(':') ? eventName.split(':')[1] : eventName;
-
-      // Should have at least 2 parts (object + verb)
-      const parts = nameWithoutCategory.split('_');
+      const parts = splitEventName(eventName);
       return parts.length >= 2;
     }
 
@@ -195,11 +213,13 @@ export default {
       if (eventNameArg.type === 'Literal' && typeof eventNameArg.value === 'string') {
         const eventName = eventNameArg.value;
 
-        // Check snake_case
-        if (!isSnakeCase(eventName)) {
+        const isCorrectCasing = casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
+        const messageId = casing === 'snake_case' ? 'notSnakeCase' : 'notCamelCase';
+
+        if (!isCorrectCasing) {
           context.report({
             node: eventNameArg,
-            messageId: 'notSnakeCase',
+            messageId,
             data: { eventName },
           });
           return;
@@ -237,11 +257,13 @@ export default {
             const eventName = def.node.init.value;
 
             if (typeof eventName === 'string') {
-              // Check snake_case
-              if (!isSnakeCase(eventName)) {
+              const isCorrectCasing = casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
+              const messageId = casing === 'snake_case' ? 'notSnakeCase' : 'notCamelCase';
+
+              if (!isCorrectCasing) {
                 context.report({
                   node: def.node.init,
-                  messageId: 'notSnakeCase',
+                  messageId,
                   data: { eventName },
                 });
                 return;
