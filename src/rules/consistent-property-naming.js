@@ -18,6 +18,9 @@ export default {
   },
 
   create(context) {
+    const wrapperFunctions = new Map();
+    const captureCalls = [];
+
     /**
      * Check if a string is in camelCase
      * @param {string} str - The string to check
@@ -43,30 +46,137 @@ export default {
       );
     }
 
+    function validateObjectProperties(objectNode) {
+      if (!objectNode || objectNode.type !== 'ObjectExpression') {
+        return;
+      }
+
+      objectNode.properties.forEach((prop) => {
+        if (prop.type === 'Property' && prop.key.type === 'Identifier') {
+          const propertyName = prop.key.name;
+          if (!isCamelCase(propertyName)) {
+            context.report({
+              node: prop.key,
+              messageId: 'notCamelCase',
+              data: {
+                property: propertyName,
+              },
+            });
+          }
+        }
+      });
+    }
+
+    function resolvePropertiesArgument(propertiesArg) {
+      if (!propertiesArg) {
+        return null;
+      }
+
+      // Direct object literal
+      if (propertiesArg.type === 'ObjectExpression') {
+        return propertiesArg;
+      }
+
+      // Variable reference - trace back to definition
+      if (propertiesArg.type === 'Identifier') {
+        const scope = context.sourceCode.getScope(propertiesArg);
+        const variable = scope.variables.find((v) => v.name === propertiesArg.name);
+
+        if (variable && variable.defs.length > 0) {
+          const def = variable.defs[0];
+          if (def.node.init && def.node.init.type === 'ObjectExpression') {
+            return def.node.init;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function getFunctionName(node) {
+      // Regular function declaration: function foo() {}
+      if (node.type === 'FunctionDeclaration' && node.id) {
+        return node.id.name;
+      }
+
+      // Variable declaration with arrow function: const foo = () => {}
+      // Variable declaration with function expression: const foo = function() {}
+      if (node.parent && node.parent.type === 'VariableDeclarator' && node.parent.id) {
+        return node.parent.id.name;
+      }
+
+      return null;
+    }
+
+    function getParentFunction(node) {
+      let current = node.parent;
+      while (current) {
+        if (
+          current.type === 'FunctionDeclaration' ||
+          current.type === 'FunctionExpression' ||
+          current.type === 'ArrowFunctionExpression'
+        ) {
+          return current;
+        }
+        current = current.parent;
+      }
+      return null;
+    }
+
+    const allCallExpressions = [];
+
     return {
       CallExpression(node) {
-        if (!isPostHogCapture(node)) {
-          return;
-        }
+        allCallExpressions.push(node);
 
-        // Second argument should be the properties object
-        const propertiesArg = node.arguments[1];
-        if (!propertiesArg || propertiesArg.type !== 'ObjectExpression') {
-          return;
+        if (isPostHogCapture(node)) {
+          captureCalls.push(node);
         }
+      },
 
-        // Check each property in the object
-        propertiesArg.properties.forEach((prop) => {
-          if (prop.type === 'Property' && prop.key.type === 'Identifier') {
-            const propertyName = prop.key.name;
-            if (!isCamelCase(propertyName)) {
-              context.report({
-                node: prop.key,
-                messageId: 'notCamelCase',
-                data: {
-                  property: propertyName,
-                },
-              });
+      'Program:exit'() {
+        captureCalls.forEach((captureCall) => {
+          const propertiesArg = captureCall.arguments[1];
+
+          if (propertiesArg && propertiesArg.type === 'Identifier') {
+            const parentFunc = getParentFunction(captureCall);
+            if (parentFunc) {
+              const paramName = propertiesArg.name;
+              const paramIndex = parentFunc.params.findIndex(
+                (p) => p.type === 'Identifier' && p.name === paramName,
+              );
+
+              if (paramIndex !== -1) {
+                const functionName = getFunctionName(parentFunc);
+                if (functionName) {
+                  wrapperFunctions.set(functionName, paramIndex);
+                }
+              }
+            }
+          }
+
+          // validate direct calls
+          const objectNode = resolvePropertiesArgument(propertiesArg);
+          if (objectNode) {
+            validateObjectProperties(objectNode);
+          }
+        });
+
+        // validate calls to wrapper functions
+        allCallExpressions.forEach((callNode) => {
+          if (isPostHogCapture(callNode)) {
+            return;
+          }
+
+          if (callNode.callee.type === 'Identifier') {
+            const functionName = callNode.callee.name;
+            if (wrapperFunctions.has(functionName)) {
+              const paramIndex = wrapperFunctions.get(functionName);
+              const propertiesArg = callNode.arguments[paramIndex];
+              const objectNode = resolvePropertiesArgument(propertiesArg);
+              if (objectNode) {
+                validateObjectProperties(objectNode);
+              }
             }
           }
         });
