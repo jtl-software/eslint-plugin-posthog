@@ -34,8 +34,8 @@ Specifies the casing convention for event names.
 // .eslintrc.js
 module.exports = {
   rules: {
-    'posthog/valid-event-names': ['error', { casing: 'camelCase' }]
-  }
+    'posthog/valid-event-names': ['error', { casing: 'camelCase' }],
+  },
 };
 ```
 
@@ -55,10 +55,13 @@ The rule includes a comprehensive list of built-in verbs (e.g., `click`, `view`,
 module.exports = {
   rules: {
     // Add custom verbs for your domain
-    'posthog/valid-event-names': ['error', {
-      customVerbs: ['process', 'checkout', 'authorize', 'reset']
-    }]
-  }
+    'posthog/valid-event-names': [
+      'error',
+      {
+        customVerbs: ['process', 'checkout', 'authorize', 'reset'],
+      },
+    ],
+  },
 };
 ```
 

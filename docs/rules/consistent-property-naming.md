@@ -7,6 +7,7 @@ Enforce consistent property naming convention in PostHog capture calls.
 This rule enforces consistent naming for all properties passed to `postHog.capture()` calls. The default is `snake_case` , but you can configure it to use `camelCase` to match your team's conventions. Consistent naming conventions make it easier to query and analyze events in PostHog.
 
 The rule also works with:
+
 - **Variable tracking**: Detects properties defined in variables
 - **Wrapper functions**: Validates properties passed through custom tracking functions
 - **Nested functions**: Handles complex component structures
@@ -35,8 +36,8 @@ Specifies the casing convention for property names.
 module.exports = {
   rules: {
     // Use camelCase instead of default snake_case
-    'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }]
-  }
+    'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }],
+  },
 };
 ```
 

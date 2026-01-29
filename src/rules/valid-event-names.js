@@ -7,7 +7,8 @@ export default {
   meta: {
     type: 'suggestion',
     docs: {
-      description: 'Enforce naming conventions and object-verb pattern for PostHog event names',
+      description:
+        'Enforce naming conventions and object-verb pattern for PostHog event names',
       recommended: true,
     },
     messages: {
@@ -55,7 +56,9 @@ export default {
 
     function splitEventName(eventName) {
       // Remove category prefix if present
-      const nameWithoutCategory = eventName.includes(':') ? eventName.split(':')[1] : eventName;
+      const nameWithoutCategory = eventName.includes(':')
+        ? eventName.split(':')[1]
+        : eventName;
 
       if (casing === 'snake_case') {
         return nameWithoutCategory.split('_');
@@ -161,7 +164,8 @@ export default {
       const allVerbs = [...commonVerbs, ...customVerbs.map(v => v.toLowerCase())];
 
       return (
-        verbPatterns.some((pattern) => pattern.test(lastWord)) || allVerbs.includes(lastWord)
+        verbPatterns.some(pattern => pattern.test(lastWord)) ||
+        allVerbs.includes(lastWord)
       );
     }
 
@@ -224,7 +228,8 @@ export default {
       if (eventNameArg.type === 'Literal' && typeof eventNameArg.value === 'string') {
         const eventName = eventNameArg.value;
 
-        const isCorrectCasing = casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
+        const isCorrectCasing =
+          casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
         const messageId = casing === 'snake_case' ? 'notSnakeCase' : 'notCamelCase';
 
         if (!isCorrectCasing) {
@@ -260,7 +265,7 @@ export default {
       if (eventNameArg.type === 'Identifier') {
         // Find the constant definition
         const scope = context.sourceCode.getScope(eventNameArg);
-        const variable = scope.variables.find((v) => v.name === eventNameArg.name);
+        const variable = scope.variables.find(v => v.name === eventNameArg.name);
 
         if (variable && variable.defs.length > 0) {
           const def = variable.defs[0];
@@ -268,7 +273,8 @@ export default {
             const eventName = def.node.init.value;
 
             if (typeof eventName === 'string') {
-              const isCorrectCasing = casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
+              const isCorrectCasing =
+                casing === 'snake_case' ? isSnakeCase(eventName) : isCamelCase(eventName);
               const messageId = casing === 'snake_case' ? 'notSnakeCase' : 'notCamelCase';
 
               if (!isCorrectCasing) {
@@ -312,8 +318,11 @@ export default {
           node.source.value === 'posthog' ||
           node.source.value.startsWith('@posthog/')
         ) {
-          node.specifiers.forEach((specifier) => {
-            if (specifier.type === 'ImportSpecifier' && specifier.imported.name === 'capture') {
+          node.specifiers.forEach(specifier => {
+            if (
+              specifier.type === 'ImportSpecifier' &&
+              specifier.imported.name === 'capture'
+            ) {
               captureAliases.add(specifier.local.name);
             }
           });
