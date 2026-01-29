@@ -2,15 +2,14 @@
 
 ESLint plugin for enforcing PostHog event tracking best practices.
 
-## Installation
+## ⚡️ Prerequisites
 
-```bash
-npm install --save-dev @jtl-software/eslint-plugin-posthog
-```
+- Run `pnpm install` on repository root to install husky with dependencies
+- For local development, ensure you are using the Node.js and pnpm versions specified in the `.tool-versions` file.
+  - ASDF: run `asdf install` to install the correct versions of node and pnpm
+- If the versions in `.tool-versions` need to be updated (e.g., to match the latest Node.js LTS), please coordinate with the team before making changes to ensure consistency across the project and CI/CD pipelines.
 
-```bash
-yarn add -D @jtl-software/eslint-plugin-posthog
-```
+### Installation
 
 ```bash
 pnpm add -D @jtl-software/eslint-plugin-posthog
@@ -212,13 +211,13 @@ To test the plugin in your project before publishing:
 1. In this directory, run:
 
    ```bash
-   npm link
+   pnpm link
    ```
 
 2. In your project directory:
 
    ```bash
-   npm link @jtl-software/eslint-plugin-posthog
+   pnpm link @jtl-software/eslint-plugin-posthog
    ```
 
 3. Add the plugin to your ESLint config as shown above
