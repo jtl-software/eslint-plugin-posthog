@@ -27,7 +27,7 @@ jobs:
           version: ${{ steps.pnpm-version.outputs.version }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .tool-versions
           cache: 'pnpm'
@@ -58,7 +58,7 @@ jobs:
           version: ${{ steps.pnpm-version.outputs.version }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: .tool-versions
           cache: 'pnpm'
