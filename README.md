@@ -2,15 +2,11 @@
 
 ESLint plugin for enforcing PostHog event tracking best practices.
 
-## Installation
+## ⚡️ Prerequisites
 
-```bash
-npm install --save-dev @jtl-software/eslint-plugin-posthog
-```
+- Run `pnpm install` on repository root to install husky with dependencies
 
-```bash
-yarn add -D @jtl-software/eslint-plugin-posthog
-```
+### Installation
 
 ```bash
 pnpm add -D @jtl-software/eslint-plugin-posthog
@@ -48,9 +44,9 @@ module.exports = {
 
 ## Rules
 
-| Rule                                                                     | Description                                       | Severity |
-| ------------------------------------------------------------------------ | ------------------------------------------------- | -------- |
-| [consistent-property-naming](./docs/rules/consistent-property-naming.md) | Enforce consistent property naming (snake_case or camelCase) | error    |
+| Rule                                                                     | Description                                                      | Severity |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------- | -------- |
+| [consistent-property-naming](./docs/rules/consistent-property-naming.md) | Enforce consistent property naming (snake_case or camelCase)     | error    |
 | [valid-event-names](./docs/rules/valid-event-names.md)                   | Enforce valid event naming conventions (snake_case or camelCase) | error    |
 
 ## Configuration
@@ -64,9 +60,9 @@ Both rules default to `snake_case` , but support configuration to match your tea
 export default [
   {
     rules: {
-      'posthog/valid-event-names': ['error', { casing: 'snake_case' }] // default, or 'camelCase'
-    }
-  }
+      'posthog/valid-event-names': ['error', { casing: 'snake_case' }], // default, or 'camelCase'
+    },
+  },
 ];
 ```
 
@@ -77,9 +73,9 @@ export default [
 export default [
   {
     rules: {
-      'posthog/consistent-property-naming': ['error', { casing: 'snake_case' }] // default, or 'camelCase'
-    }
-  }
+      'posthog/consistent-property-naming': ['error', { casing: 'snake_case' }], // default, or 'camelCase'
+    },
+  },
 ];
 ```
 
@@ -92,21 +88,20 @@ import posthog from '@jtl-software/eslint-plugin-posthog';
 export default [
   {
     plugins: {
-      posthog
+      posthog,
     },
     rules: {
-      // Default: snake_case for both 
+      // Default: snake_case for both
       'posthog/valid-event-names': 'error',
       'posthog/consistent-property-naming': 'error',
 
       // Or use camelCase for both
       // 'posthog/valid-event-names': ['error', { casing: 'camelCase' }],
       // 'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }],
-    }
-  }
+    },
+  },
 ];
 ```
-
 
 ## Examples
 
@@ -116,7 +111,8 @@ export default [
 
 ```js
 // ❌ Multiple issues
-postHog.capture('userClickedButton', {  // camelCase event name (should be snake_case)
+postHog.capture('userClickedButton', {
+  // camelCase event name (should be snake_case)
   userId: '123', // camelCase property (should be snake_case)
   ButtonName: 'Submit', // PascalCase
 });
@@ -152,8 +148,8 @@ export default [
     rules: {
       'posthog/valid-event-names': ['error', { casing: 'camelCase' }],
       'posthog/consistent-property-naming': ['error', { casing: 'camelCase' }],
-    }
-  }
+    },
+  },
 ];
 
 // Usage
@@ -178,8 +174,8 @@ export default [
     rules: {
       'posthog/valid-event-names': ['error', { casing: 'snake_case' }],
       'posthog/consistent-property-naming': ['error', { casing: 'snake_case' }],
-    }
-  }
+    },
+  },
 ];
 
 // Usage
@@ -212,13 +208,13 @@ To test the plugin in your project before publishing:
 1. In this directory, run:
 
    ```bash
-   npm link
+   pnpm link
    ```
 
 2. In your project directory:
 
    ```bash
-   npm link @jtl-software/eslint-plugin-posthog
+   pnpm link @jtl-software/eslint-plugin-posthog
    ```
 
 3. Add the plugin to your ESLint config as shown above

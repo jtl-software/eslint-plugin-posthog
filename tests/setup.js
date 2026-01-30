@@ -4,7 +4,7 @@
  */
 
 import { RuleTester } from 'eslint';
-import { describe, it, afterAll } from 'vitest';
+import { afterAll, describe, it } from 'vitest';
 
 // Configure RuleTester to work with Vitest
 RuleTester.describe = describe;

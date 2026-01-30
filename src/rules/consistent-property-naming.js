@@ -64,10 +64,13 @@ export default {
         return;
       }
 
-      objectNode.properties.forEach((prop) => {
+      objectNode.properties.forEach(prop => {
         if (prop.type === 'Property' && prop.key.type === 'Identifier') {
           const propertyName = prop.key.name;
-          const isCorrectCasing = casing === 'camelCase' ? isCamelCase(propertyName) : isSnakeCase(propertyName);
+          const isCorrectCasing =
+            casing === 'camelCase'
+              ? isCamelCase(propertyName)
+              : isSnakeCase(propertyName);
           const messageId = casing === 'camelCase' ? 'notCamelCase' : 'notSnakeCase';
 
           if (!isCorrectCasing) {
@@ -96,7 +99,7 @@ export default {
       // Variable reference - trace back to definition
       if (propertiesArg.type === 'Identifier') {
         const scope = context.sourceCode.getScope(propertiesArg);
-        const variable = scope.variables.find((v) => v.name === propertiesArg.name);
+        const variable = scope.variables.find(v => v.name === propertiesArg.name);
 
         if (variable && variable.defs.length > 0) {
           const def = variable.defs[0];
@@ -151,7 +154,7 @@ export default {
       },
 
       'Program:exit'() {
-        captureCalls.forEach((captureCall) => {
+        captureCalls.forEach(captureCall => {
           const propertiesArg = captureCall.arguments[1];
 
           if (propertiesArg && propertiesArg.type === 'Identifier') {
@@ -159,7 +162,7 @@ export default {
             if (parentFunc) {
               const paramName = propertiesArg.name;
               const paramIndex = parentFunc.params.findIndex(
-                (p) => p.type === 'Identifier' && p.name === paramName,
+                p => p.type === 'Identifier' && p.name === paramName,
               );
 
               if (paramIndex !== -1) {
@@ -179,7 +182,7 @@ export default {
         });
 
         // validate calls to wrapper functions
-        allCallExpressions.forEach((callNode) => {
+        allCallExpressions.forEach(callNode => {
           if (isPostHogCapture(callNode)) {
             return;
           }
