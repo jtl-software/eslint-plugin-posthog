@@ -17,23 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get pnpm version
-        id: pnpm-version
-        run: echo "version=$(grep pnpm .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ steps.pnpm-version.outputs.version }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .tool-versions
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup pnpm and install dependencies
+        uses: ./.github/actions/setup-pnpm
 
       - name: Run tests
         run: pnpm test
@@ -48,24 +33,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get pnpm version
-        id: pnpm-version
-        run: echo "version=$(grep pnpm .tool-versions | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+      - name: Setup pnpm and install dependencies
+        uses: ./.github/actions/setup-pnpm
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ steps.pnpm-version.outputs.version }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .tool-versions
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup npm registry
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Check if version exists on npm
         id: version-check
@@ -84,5 +56,3 @@ jobs:
       - name: Publish to npm
         if: steps.version-check.outputs.should-publish == 'true'
         run: pnpm publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

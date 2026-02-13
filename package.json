@@ -4,7 +4,15 @@
   "description": "ESLint rules for PostHog event tracking best practices",
   "main": "src/index.js",
   "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=24.13.0"
+    }
+  },
   "scripts": {
+    "ci": "pnpm install --frozen-lockfile",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src tests",
