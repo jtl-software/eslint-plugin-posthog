@@ -126,3 +126,32 @@ Examples:
 - `account_settings:password_changed`
 - `signup_flow:form_submitted`
 - `checkout:payment_completed`
+
+## Backend and object-form captures
+
+By default the rule only checks `postHog.capture(...)` (posthog-js). Backends
+using posthog-node or a wrapper service call `capture` on a differently named
+object and pass a single object argument. Both are supported:
+
+- Configure the object/instance names with `captureObjectNames` (default `['postHog']`).
+- The event name is read from the `event` key when the first argument is an object.
+
+```js
+// eslint.config.js
+{
+  rules: {
+    'posthog/valid-event-names': [
+      'error',
+      { captureObjectNames: ['postHog', 'postHogService'] },
+    ],
+  },
+}
+```
+
+```js
+// Checked when 'postHogService' is in captureObjectNames
+postHogService.capture({
+  event: 'wawi_connected',
+  properties: { tenant_id: '1' },
+});
+```

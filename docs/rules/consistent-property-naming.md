@@ -82,3 +82,32 @@ function trackEvent(name, props) {
 }
 trackEvent('event_name', { user_id: '123', product_name: 'Test' });
 ```
+
+## Backend and object-form captures
+
+By default the rule only checks `postHog.capture(...)` (posthog-js). Backends
+using posthog-node or a wrapper service call `capture` on a differently named
+object and pass a single object argument. Both are supported:
+
+- Configure the object/instance names with `captureObjectNames` (default `['postHog']`).
+- The properties are read from the `properties` key when the first argument is an object.
+
+```js
+// eslint.config.js
+{
+  rules: {
+    'posthog/consistent-property-naming': [
+      'error',
+      { captureObjectNames: ['postHog', 'postHogService'] },
+    ],
+  },
+}
+```
+
+```js
+// Checked when 'postHogService' is in captureObjectNames
+postHogService.capture({
+  event: 'wawi_connected',
+  properties: { tenant_id: '1', product_version: '2' },
+});
+```

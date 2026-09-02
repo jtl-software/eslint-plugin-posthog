@@ -10,6 +10,19 @@ const ruleTester = new RuleTester({
 
 ruleTester.run('consistent-property-naming', rule, {
   valid: [
+    // object-form capture (posthog-node / wrapper) with a configured object name
+    {
+      code: `postHogService.capture({ event: 'event_name', properties: { tenant_id: '1', product_version: '2' } })`,
+      options: [{ captureObjectNames: ['postHogService'] }],
+    },
+    // object-form capture on the default postHog object
+    {
+      code: `postHog.capture({ event: 'event_name', properties: { user_id: '1' } })`,
+    },
+    // capture on a non-configured object is ignored
+    {
+      code: `otherService.capture({ event: 'event_name', properties: { badProp: '1' } })`,
+    },
     {
       code: `postHog.capture('event_name', { user_id: '123', product_name: 'Test' })`,
     },
@@ -332,6 +345,21 @@ ruleTester.run('consistent-property-naming with camelCase', rule, {
         {
           messageId: 'notCamelCase',
           data: { property: 'product_name' },
+        },
+      ],
+    },
+    // object-form properties with wrong casing
+    {
+      code: `postHogService.capture({ event: 'event_name', properties: { tenantId: '1', productVersion: '2' } })`,
+      options: [{ captureObjectNames: ['postHogService'] }],
+      errors: [
+        {
+          messageId: 'notSnakeCase',
+          data: { property: 'tenantId' },
+        },
+        {
+          messageId: 'notSnakeCase',
+          data: { property: 'productVersion' },
         },
       ],
     },

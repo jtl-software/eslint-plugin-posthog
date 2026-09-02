@@ -24,6 +24,13 @@ export default {
             enum: ['camelCase', 'snake_case'],
             default: 'snake_case',
           },
+          captureObjectNames: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            default: ['postHog'],
+          },
         },
         additionalProperties: false,
       },
@@ -36,6 +43,10 @@ export default {
 
     const options = context.options[0] || {};
     const casing = options.casing || 'snake_case';
+    // Object/instance names that `.capture()` is called on. Defaults to the
+    // posthog-js `postHog`; add backend wrappers (posthog-node client, an
+    // `postHogService`) here to lint their captures too.
+    const captureObjectNames = options.captureObjectNames || ['postHog'];
 
     function isCamelCase(str) {
       return /^[a-z][a-zA-Z0-9]*$/.test(str);
@@ -55,8 +66,34 @@ export default {
         node.type === 'CallExpression' &&
         node.callee.type === 'MemberExpression' &&
         node.callee.property.name === 'capture' &&
-        node.callee.object.name === 'postHog'
+        captureObjectNames.includes(node.callee.object.name)
       );
+    }
+
+    /**
+     * Resolve the properties argument from a capture call, supporting both the
+     * posthog-js positional form `capture('event', { props })` and the object
+     * form `capture({ event, properties: { props } })` used by posthog-node.
+     * @param {Object} captureCall - CallExpression node
+     * @returns {Object|null} the properties argument node, or null
+     */
+    function getPropertiesArg(captureCall) {
+      const firstArg = captureCall.arguments[0];
+
+      if (firstArg && firstArg.type === 'ObjectExpression') {
+        const propertiesProp = firstArg.properties.find(
+          prop =>
+            prop.type === 'Property' &&
+            !prop.computed &&
+            ((prop.key.type === 'Identifier' &&
+              prop.key.name === 'properties') ||
+              (prop.key.type === 'Literal' &&
+                prop.key.value === 'properties')),
+        );
+        return propertiesProp ? propertiesProp.value : null;
+      }
+
+      return captureCall.arguments[1] || null;
     }
 
     function validateObjectProperties(objectNode) {
@@ -155,7 +192,7 @@ export default {
 
       'Program:exit'() {
         captureCalls.forEach(captureCall => {
-          const propertiesArg = captureCall.arguments[1];
+          const propertiesArg = getPropertiesArg(captureCall);
 
           if (propertiesArg && propertiesArg.type === 'Identifier') {
             const parentFunc = getParentFunction(captureCall);
