@@ -10,6 +10,19 @@ const ruleTester = new RuleTester({
 
 ruleTester.run('valid-event-names', rule, {
   valid: [
+    // object-form capture (posthog-node / wrapper) with a configured object name
+    {
+      code: `postHogService.capture({ event: 'wawi_connected', properties: { tenant_id: '1' } })`,
+      options: [{ captureObjectNames: ['postHogService'] }],
+    },
+    // object-form capture on the default postHog object
+    {
+      code: `postHog.capture({ event: 'button_clicked', properties: { path: '/' } })`,
+    },
+    // capture on a non-configured object is ignored
+    {
+      code: `otherService.capture({ event: 'badName' })`,
+    },
     // snake_case with object-verb pattern (past tense)
     {
       code: `postHog.capture('button_clicked', { userId: '123' })`,
@@ -386,6 +399,28 @@ ruleTester.run('valid-event-names with customVerbs', rule, {
         {
           messageId: 'notCamelCase',
           data: { eventName: 'order_process' },
+        },
+      ],
+    },
+    // object-form event name, wrong casing
+    {
+      code: `postHogService.capture({ event: 'wawiConnected', properties: {} })`,
+      options: [{ captureObjectNames: ['postHogService'] }],
+      errors: [
+        {
+          messageId: 'notSnakeCase',
+          data: { eventName: 'wawiConnected' },
+        },
+      ],
+    },
+    // object-form event name missing a verb
+    {
+      code: `postHogService.capture({ event: 'wawi_status', properties: {} })`,
+      options: [{ captureObjectNames: ['postHogService'] }],
+      errors: [
+        {
+          messageId: 'missingVerb',
+          data: { eventName: 'wawi_status' },
         },
       ],
     },

@@ -35,6 +35,13 @@ export default {
             },
             default: [],
           },
+          captureObjectNames: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            default: ['postHog'],
+          },
         },
         additionalProperties: false,
       },
@@ -45,6 +52,10 @@ export default {
     const options = context.options[0] || {};
     const casing = options.casing || 'snake_case';
     const customVerbs = options.customVerbs || [];
+    // Object/instance names that `.capture()` is called on. Defaults to the
+    // posthog-js `postHog`; add backend wrappers (e.g. a posthog-node client or
+    // an `postHogService`) here to lint their captures too.
+    const captureObjectNames = options.captureObjectNames || ['postHog'];
 
     function isSnakeCase(str) {
       return /^[a-z][a-z0-9_:]*$/.test(str);
@@ -189,8 +200,35 @@ export default {
         node.type === 'CallExpression' &&
         node.callee.type === 'MemberExpression' &&
         node.callee.property.name === 'capture' &&
-        node.callee.object.name === 'postHog'
+        captureObjectNames.includes(node.callee.object.name)
       );
+    }
+
+    /**
+     * Resolve the event-name node from a capture call, supporting both the
+     * posthog-js positional form `capture('event', {...})` and the object form
+     * `capture({ event: 'event', ... })` used by posthog-node and wrappers.
+     * @param {Object} node - CallExpression node
+     * @returns {Object|null} the node holding the event name, or null
+     */
+    function getEventNameNode(node) {
+      const firstArg = node.arguments[0];
+      if (!firstArg) {
+        return null;
+      }
+
+      if (firstArg.type === 'ObjectExpression') {
+        const eventProp = firstArg.properties.find(
+          prop =>
+            prop.type === 'Property' &&
+            !prop.computed &&
+            ((prop.key.type === 'Identifier' && prop.key.name === 'event') ||
+              (prop.key.type === 'Literal' && prop.key.value === 'event')),
+        );
+        return eventProp ? eventProp.value : null;
+      }
+
+      return firstArg;
     }
 
     // Track identifiers that refer to postHog.capture
@@ -334,7 +372,7 @@ export default {
         if (
           node.init &&
           node.init.type === 'MemberExpression' &&
-          node.init.object.name === 'postHog' &&
+          captureObjectNames.includes(node.init.object.name) &&
           node.init.property.name === 'capture' &&
           node.id.type === 'Identifier'
         ) {
@@ -347,8 +385,8 @@ export default {
           return;
         }
 
-        // First argument should be the event name
-        const eventNameArg = node.arguments[0];
+        // Supports both capture('event', {...}) and capture({ event: '...' })
+        const eventNameArg = getEventNameNode(node);
         if (!eventNameArg) {
           return;
         }
